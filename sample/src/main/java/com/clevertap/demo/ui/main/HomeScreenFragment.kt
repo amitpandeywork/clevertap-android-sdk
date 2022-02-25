@@ -20,9 +20,9 @@ import androidx.core.content.ContextCompat
 import androidx.fragment.app.Fragment
 import androidx.fragment.app.viewModels
 import androidx.lifecycle.Observer
-import com.clevertap.android.geofence.CTGeofenceAPI
+/*import com.clevertap.android.geofence.CTGeofenceAPI
 import com.clevertap.android.geofence.CTGeofenceSettings
-import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener
+import com.clevertap.android.geofence.interfaces.CTGeofenceEventsListener*/
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.demo.BuildConfig
 import com.clevertap.demo.HomeScreenActivity
@@ -74,24 +74,24 @@ class HomeScreenFragment : Fragment() {
             when (commandPosition) {
                 "60" -> startActivity(Intent(activity, WebViewActivity::class.java))
                 "70" -> { // init Geofence API
-                    when {
+                    /*when {
                         // proceed only if cleverTap instance is not null
                         cleverTapInstance == null -> println("cleverTapInstance is null")
                         !checkPermissions() -> requestPermissions()
                         else -> initCTGeofenceApi(cleverTapInstance)
-                    }
+                    }*/
                 }
                 "71" -> { // trigger location
-                    try {
-                        CTGeofenceAPI.getInstance(context).triggerLocation()
+                    /*try {
+                        //CTGeofenceAPI.getInstance(context).triggerLocation()
                     } catch (e: IllegalStateException) {
                         // geofence not initialized
                         e.printStackTrace()
                         // init geofence
                         initCTGeofenceApi(cleverTapInstance!!)
-                    }
+                    }*/
                 }
-                "72" -> CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
+                //"72" -> //CTGeofenceAPI.getInstance(context).deactivate() // deactivate geofence
             }
         })
     }
@@ -107,7 +107,7 @@ class HomeScreenFragment : Fragment() {
         }
     }
 
-    private fun initCTGeofenceApi(cleverTapInstance: CleverTapAPI) {
+   /* private fun initCTGeofenceApi(cleverTapInstance: CleverTapAPI) {
         val context = activity?.applicationContext!!
 
         CTGeofenceAPI.getInstance(context).apply {
@@ -138,7 +138,7 @@ class HomeScreenFragment : Fragment() {
             })
             setCtLocationUpdatesListener { Toast.makeText(context, "Location updated", Toast.LENGTH_SHORT).show() }
         }
-    }
+    }*/
 
     /**
      * Return the current state of the permissions needed.
@@ -198,7 +198,7 @@ class HomeScreenFragment : Fragment() {
     ) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults)
 
-        if (requestCode == PERMISSIONS_REQUEST_CODE) {
+        /*if (requestCode == PERMISSIONS_REQUEST_CODE) {
             when {
                 grantResults.isEmpty() -> println("user permission interaction was interrupted")
                 grantResults[0] == PERMISSION_GRANTED && grantResults[1] == PERMISSION_GRANTED
@@ -218,6 +218,6 @@ class HomeScreenFragment : Fragment() {
                 }
 
             }
-        }
+        }*/
     }
 }
