@@ -25,6 +25,8 @@ import android.graphics.Color;
 import android.media.RingtoneManager;
 import android.net.Uri;
 import android.os.Build;
+import android.os.Build.VERSION;
+import android.os.Build.VERSION_CODES;
 import android.os.Bundle;
 import android.os.SystemClock;
 import android.text.TextUtils;
@@ -418,6 +420,11 @@ public class PushProviders implements CTPushProviderListener {
                         eventObject.put("bk", 1);
                         analyticsManager.sendPingEvent(eventObject);
 
+                        int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+                        if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                            flagsAlarmPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+                        }
+
                         if (parameters == null) {
                             int pingFrequency = getPingFrequency(context);
                             AlarmManager alarmManager = (AlarmManager) context
@@ -505,11 +512,17 @@ public class PushProviders implements CTPushProviderListener {
         int pingFrequency = getPingFrequency(context);
         if (pingFrequency > 0) {
             AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
+
+            int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+            if (VERSION.SDK_INT >= VERSION_CODES.M) {
+                flagsAlarmPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+            }
+
             Intent intent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
             intent.setPackage(context.getPackageName());
             PendingIntent alarmPendingIntent = PendingIntent
                     .getService(context, config.getAccountId().hashCode(), intent,
-                            PendingIntent.FLAG_UPDATE_CURRENT);
+                            flagsAlarmPendingIntent);
             if (alarmManager != null) {
                 alarmManager.setInexactRepeating(AlarmManager.ELAPSED_REALTIME_WAKEUP, SystemClock.elapsedRealtime(),
                         Constants.ONE_MIN_IN_MILLIS * pingFrequency, alarmPendingIntent);
@@ -896,10 +909,14 @@ public class PushProviders implements CTPushProviderListener {
     private void stopAlarmScheduler(Context context) {
         AlarmManager alarmManager = (AlarmManager) context.getSystemService(Context.ALARM_SERVICE);
         Intent cancelIntent = new Intent(CTBackgroundIntentService.MAIN_ACTION);
+        int flagsAlarmPendingIntent = PendingIntent.FLAG_UPDATE_CURRENT;
+        if (VERSION.SDK_INT >= VERSION_CODES.M) {
+            flagsAlarmPendingIntent |= PendingIntent.FLAG_IMMUTABLE;
+        }
         cancelIntent.setPackage(context.getPackageName());
         PendingIntent alarmPendingIntent = PendingIntent
                 .getService(context, config.getAccountId().hashCode(), cancelIntent,
-                        PendingIntent.FLAG_UPDATE_CURRENT);
+                       flagsAlarmPendingIntent);
         if (alarmManager != null && alarmPendingIntent != null) {
             alarmManager.cancel(alarmPendingIntent);
         }
