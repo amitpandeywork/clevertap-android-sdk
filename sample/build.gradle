@@ -8,8 +8,8 @@ android {
         applicationId "com.clevertap.demo"
         minSdkVersion 19
         targetSdkVersion 30
-        versionCode 1
-        versionName "1.0"
+        versionCode 3
+        versionName "1.0.2"
         multiDexEnabled true
         testInstrumentationRunner "android.support.test.runner.AndroidJUnitRunner"
     }
@@ -19,7 +19,7 @@ android {
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
         release {
-            minifyEnabled true
+            minifyEnabled false
             proguardFiles getDefaultProguardFile('proguard-android.txt'), 'proguard-rules.pro'
         }
     }
@@ -39,7 +39,7 @@ android {
 
 dependencies {
     def lifecycle_version = "2.3.1"
-
+    implementation fileTree(include: ['*.aar'], dir: 'libs')
     implementation 'androidx.core:core:1.3.0'
     implementation 'androidx.constraintlayout:constraintlayout:2.1.1'
     implementation 'androidx.coordinatorlayout:coordinatorlayout:1.1.0'
@@ -52,7 +52,7 @@ dependencies {
 
     //CleverTap Android SDK, make sure the AAR file is in the libs folder
     //implementation project(':clevertap-core')
-    implementation "com.clevertap.android:clevertap-android-sdk:4.2.0"
+//    implementation "com.clevertap.android:clevertap-android-sdk:4.2.0"
     //implementation project(':clevertap-geofence')
     //implementation "com.clevertap.android:clevertap-geofence-sdk:1.1.0"
     //implementation project(':clevertap-xps')
