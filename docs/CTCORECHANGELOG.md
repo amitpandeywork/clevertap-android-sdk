@@ -1,5 +1,15 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.4.0 (December 20, 2021)
+* Adds below new public APIs for smooth and easy integration of Custom Android Push Notifications Handling(FCM),Custom Push Amplification Handling and Push Templates
+  * `CTFcmMessageHandler().createNotification(applicationContext, message)`
+  * `CTFcmMessageHandler().processPushAmp(applicationContext, message)`
+  * `CleverTapAPI.setNotificationHandler(notificationHandler)`
+* Adds support for Firebase Cloud Messaging v21 and above
+
+### Version 4.3.1 (November 25, 2021)
+* Fixes a Strict Mode Read violation for low RAM devices
+
 ### Version 4.3.0 (November 2, 2021)
 * Adds support for [apps targeting Android 12 (API 31)](https://developer.android.com/about/versions/12/behavior-changes-12)
   This version is compatible with all new Android 12 changes like Notification Trampolines, Pending Intents Mutability and Safer Component Exporting.

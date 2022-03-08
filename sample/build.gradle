@@ -52,22 +52,24 @@ dependencies {
 
     //CleverTap Android SDK, make sure the AAR file is in the libs folder
     implementation project(':clevertap-core')
-    //implementation "com.clevertap.android:clevertap-android-sdk:4.3.0"
+    //implementation "com.clevertap.android:clevertap-android-sdk:4.4.0"
     implementation project(':clevertap-geofence')
     //implementation "com.clevertap.android:clevertap-geofence-sdk:1.1.0"
     implementation project(':clevertap-xps')
     // For Xiaomi Push use
-    //implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.1.0'
+    //implementation 'com.clevertap.android:clevertap-xiaomi-sdk:1.3.0'
     implementation project(':clevertap-hms')
+    implementation project(':clevertap-pushtemplates')
+//    implementation "com.clevertap.android:push-templates:1.0.1"
     // For Huawei Push use
-    //implementation 'com.clevertap.android:clevertap-hms-sdk:1.1.0'
+    //implementation 'com.clevertap.android:clevertap-hms-sdk:1.2.0'
     //implementation 'com.huawei.hms:push:6.1.0.300'
 
     implementation 'com.google.android.gms:play-services-location:18.0.0'// Needed for geofence
     implementation 'androidx.work:work-runtime:2.7.0'// Needed for geofence
     implementation 'androidx.concurrent:concurrent-futures:1.1.0'// Needed for geofence
 
-    implementation 'com.google.firebase:firebase-messaging:20.2.4' //Needed for FCM
+    implementation 'com.google.firebase:firebase-messaging:21.0.0' //Needed for FCM
     implementation 'com.google.android.gms:play-services-ads:20.4.0' //Needed to use Google Ad Ids
     //ExoPlayer Libraries for Audio/Video InApp Notifications
     implementation 'com.google.android.exoplayer:exoplayer:2.15.1'
