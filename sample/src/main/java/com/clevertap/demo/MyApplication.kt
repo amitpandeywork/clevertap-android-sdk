@@ -18,10 +18,14 @@ import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
 import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
+import com.clevertap.android.sdk.pushnotification.PushConstants.ALL_DEVICES
+import com.clevertap.android.sdk.pushnotification.PushConstants.NO_DEVICES
+import com.clevertap.android.sdk.pushnotification.PushConstants.XIAOMI_MIUI_DEVICES
 import com.google.android.gms.security.ProviderInstaller
 import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
 import org.json.JSONObject
 import java.util.HashMap
+import kotlin.system.measureTimeMillis
 
 class MyApplication : MultiDexApplication(), CTPushNotificationListener, ActivityLifecycleCallbacks {
 
@@ -43,9 +47,14 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         )*/
 
         CleverTapAPI.setDebugLevel(VERBOSE)
+        //CleverTapAPI.changeXiaomiCredentials("your xiaomi app id","your xiaomi app key")
+        //CleverTapAPI.enableXiaomiPushOn(XIAOMI_MIUI_DEVICES)
         TemplateRenderer.debugLevel = 3;
-        CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler);
-        ActivityLifecycleCallback.register(this)
+        CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
+
+        val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
+        println("Time taken to execute  ActivityLifecycleCallback.register = $measureTimeMillis milliseconds")
+
         registerActivityLifecycleCallbacks(this)
         super.onCreate()
 
