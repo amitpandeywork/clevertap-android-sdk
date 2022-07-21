@@ -168,7 +168,8 @@ public class ManifestInfo {
         return backgroundSync;
     }
 
-    boolean isSSLPinningEnabled() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public boolean isSSLPinningEnabled() {
         return sslPinning;
     }
 
