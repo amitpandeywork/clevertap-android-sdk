@@ -26,7 +26,7 @@ We publish the SDK to `mavenCentral` as an `AAR` file. Just declare it as depend
 
 ```groovy
     dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.5.2"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.6.1"
     }
 ```
 
@@ -34,7 +34,7 @@ Alternatively, you can download and add the AAR file included in this repo in yo
     
  ```groovy
     dependencies {      
-        implementation (name: "clevertap-android-sdk-4.5.2", ext: 'aar')
+        implementation (name: "clevertap-android-sdk-4.6.1", ext: 'aar')
     }
 ```
 
@@ -46,7 +46,7 @@ Add the Firebase Messaging library and Android Support Library v4 as dependencie
 
 ```groovy
      dependencies {      
-         implementation "com.clevertap.android:clevertap-android-sdk:4.5.2"
+         implementation "com.clevertap.android:clevertap-android-sdk:4.6.1"
          implementation "androidx.core:core:1.3.0"
          implementation "com.google.firebase:firebase-messaging:21.0.0"
          implementation "com.google.android.gms:play-services-ads:19.4.0" // Required only if you enable Google ADID collection in the SDK (turned off by default).
@@ -71,7 +71,7 @@ Also be sure to include the `google-services.json` classpath in your Project lev
         
          }       
          dependencies {      
-             classpath "com.android.tools.build:gradle:4.2.1"
+             classpath "com.android.tools.build:gradle:7.2.1"
              classpath "com.google.gms:google-services:4.3.3"
         
              // NOTE: Do not place your application dependencies here; they belong       

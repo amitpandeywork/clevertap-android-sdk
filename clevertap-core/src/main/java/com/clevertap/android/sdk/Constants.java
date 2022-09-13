@@ -195,6 +195,7 @@ public interface Constants {
     String KEY_ALLOWED_PUSH_TYPES = "allowedPushTypes";
     String KEY_IDENTITY_TYPES = "identityTypes";
     String WZRK_PUSH_ID = "wzrk_pid";
+    String WZRK_PUSH_SILENT = "wzrk_pn_s";
     String EXTRAS_FROM = "extras_from";
     String NOTIF_MSG = "nm";
     String NOTIF_TITLE = "nt";
@@ -299,5 +300,19 @@ public interface Constants {
     String CLOSE_SYSTEM_DIALOGS = "close_system_dialogs";
     String KEY_CT_TYPE = "ct_type";
     String PT_INPUT_KEY = "pt_input_reply";
+
+    // ==========Fallback keys=========
+    String NOTIFICATION_HEALTH = "wzrk_pn_h";
+    String WZRK_TSR_FB = "wzrk_tsr_fb";// terminate and stay resident
+    String NOTIFICATION_RENDER_FALLBACK = "wzrk_fallback";
+
+    /**
+     * Device app bucket when notification is rendered
+     */
+    String WZRK_HEALTH_STATE_GOOD = "true";
+    String WZRK_HEALTH_STATE_BAD = "false";
+
+    String REGION_INDIA = "in1";
+    String REGION_EUROPE = "eu1";
 
 }

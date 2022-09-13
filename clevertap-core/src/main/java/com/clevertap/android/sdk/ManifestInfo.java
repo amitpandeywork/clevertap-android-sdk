@@ -148,7 +148,9 @@ public class ManifestInfo {
         return beta;
     }
 
-    String getAccountRegion() {
+    @RestrictTo(RestrictTo.Scope.LIBRARY)
+    public String getAccountRegion() {
+        Logger.v("ManifestInfo: getAccountRegion called, returning region:"+accountRegion);
         return accountRegion;
     }
 
