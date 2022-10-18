@@ -46,6 +46,10 @@ public class CTInAppNotificationButton implements Parcelable {
 
     private String textColor;
 
+    private String type;
+
+    private boolean fallbackToSettings;
+
     CTInAppNotificationButton() {
     }
 
@@ -57,7 +61,8 @@ public class CTInAppNotificationButton implements Parcelable {
         actionUrl = in.readString();
         borderColor = in.readString();
         borderRadius = in.readString();
-
+        type = in.readString();
+        fallbackToSettings = in.readByte() != 0x00;
         try {
             jsonDescription = in.readByte() == 0x00 ? null : new JSONObject(in.readString());
         } catch (JSONException e) {
@@ -84,7 +89,8 @@ public class CTInAppNotificationButton implements Parcelable {
         dest.writeString(actionUrl);
         dest.writeString(borderColor);
         dest.writeString(borderRadius);
-
+        dest.writeString(type);
+        dest.writeByte((byte) (fallbackToSettings ? 0x01 : 0x00));
         if (jsonDescription == null) {
             dest.writeByte((byte) (0x00));
         } else {
@@ -160,12 +166,20 @@ public class CTInAppNotificationButton implements Parcelable {
         return textColor;
     }
 
+    public String getType() {
+        return type;
+    }
+
+    public boolean isFallbackToSettings() {
+        return fallbackToSettings;
+    }
+
     @SuppressWarnings({"unused"})
     void setTextColor(String textColor) {
         this.textColor = textColor;
     }
 
-    CTInAppNotificationButton initWithJSON(JSONObject jsonObject) {
+    CTInAppNotificationButton initWithJSON(JSONObject jsonObject, CTInAppType inAppType) {
         try {
             this.jsonDescription = jsonObject;
             this.text = jsonObject.has(Constants.KEY_TEXT) ? jsonObject.getString(Constants.KEY_TEXT) : "";
@@ -181,9 +195,33 @@ public class CTInAppNotificationButton implements Parcelable {
             JSONObject actions = jsonObject.has(Constants.KEY_ACTIONS) ? jsonObject
                     .getJSONObject(Constants.KEY_ACTIONS) : null;
             if (actions != null) {
+
+                //TODO REMOVE THIS AFTER TESTING AND BACKEND CHANGE IS INCLUDED and before RELEASE
+                if (inAppType == CTInAppType.CTInAppTypeCoverImageOnly ||
+                        inAppType == CTInAppType.CTInAppTypeInterstitialImageOnly ||
+                        inAppType == CTInAppType.CTInAppTypeHalfInterstitialImageOnly){
+                    actions.put(Constants.KEY_TYPE, Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION);
+                    actions.put(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS, true);
+                }else {
+                    //TODO REMOVE THIS AFTER TESTING AND BACKEND CHANGE IS INCLUDED and before RELEASE
+                    if (jsonObject.has(Constants.KEY_TEXT) && jsonObject.getString(
+                            Constants.KEY_TEXT).contains("Allow")) {
+                        actions.put(Constants.KEY_TYPE, Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION);
+                        actions.put(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS, true);
+                    }
+                }
+                ////
+
                 String action = actions.has(Constants.KEY_ANDROID) ? actions.getString(Constants.KEY_ANDROID) : "";
                 if (!action.isEmpty()) {
                     this.actionUrl = action;
+                }
+
+                //TODO Modify the below lines when package is released. Add empty checks here too.
+                if (actions.getString(Constants.KEY_TYPE).equalsIgnoreCase(
+                        Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)) {
+                    type = actions.getString(Constants.KEY_TYPE);
+                    fallbackToSettings = actions.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS);
                 }
             }
 
@@ -207,6 +245,7 @@ public class CTInAppNotificationButton implements Parcelable {
                     }
                 }
             }
+
         } catch (JSONException e) {
             this.error = "Invalid JSON";
         }

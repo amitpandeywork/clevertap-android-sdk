@@ -40,6 +40,7 @@ import java.util.concurrent.Callable;
 import org.json.JSONObject;
 
 import static android.content.Context.USAGE_STATS_SERVICE;
+import static com.clevertap.android.sdk.inapp.InAppController.LOCAL_INAPP_COUNT;
 
 @RestrictTo(Scope.LIBRARY)
 public class DeviceInfo {
@@ -391,12 +392,12 @@ public class DeviceInfo {
     /**
      * Device is a smart phone
      */
-    static final int SMART_PHONE = 1;
+    public static final int SMART_PHONE = 1;
 
     /**
      * Device is a tablet
      */
-    static final int TABLET = 2;
+    public static final int TABLET = 2;
 
     /**
      * Device is a television
@@ -539,12 +540,8 @@ public class DeviceInfo {
             if (getGoogleAdID() != null) {
                 deviceIsMultiUser = new LoginInfoProvider(context, config, this).deviceIsMultiUser();
             }
-            JSONObject appLaunchFields = CTJsonConverter.from(this, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
+            return CTJsonConverter.from(this, mCoreMetaData.getLocationFromUser(), enableNetworkInfoReporting,
                     deviceIsMultiUser);
-            if(mCoreMetaData.getDirectCallSDKVersion() != 0) {
-                appLaunchFields.put("dcv", mCoreMetaData.getDirectCallSDKVersion());
-            }
-            return appLaunchFields;
         } catch (Throwable t) {
             config.getLogger().verbose(config.getAccountId(), "Failed to construct App Launched event", t);
             return new JSONObject();
@@ -723,6 +720,10 @@ public class DeviceInfo {
 
     int getWidthPixels() {
         return getDeviceCachedInfo().widthPixels;
+    }
+
+    public int getLocalInAppCount(){
+        return StorageHelper.getInt(context,LOCAL_INAPP_COUNT,0);
     }
 
     void onInitDeviceInfo(final String cleverTapID) {

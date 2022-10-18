@@ -50,7 +50,7 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                     }
                 }
 
-                didClick(formData, null);
+                didClick(-1, formData, null);
                 Logger.d("Executing call to action for in-app: " + url);
                 fireUrlThroughIntent(url, formData);
             } catch (Throwable t) {
@@ -131,7 +131,8 @@ public abstract class CTInAppBaseFullHtmlFragment extends CTInAppBaseFullFragmen
                     webView.getSettings().setAllowFileAccessFromFileURLs(false);
                 }
                 webView.addJavascriptInterface(
-                        new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(), config)), "CleverTap");
+                        new CTWebInterface(CleverTapAPI.instanceWithConfig(getActivity(), config),
+                                this), "CleverTap");
             }
 
             if (isDarkenEnabled()) {

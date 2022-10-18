@@ -1,8 +1,18 @@
 ## CHANGE LOG.
 
+### October 10, 2022
+* [CleverTap Android SDK v4.6.4](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+* [CleverTap Xiaomi Push SDK v1.5.1](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTXIAOMIPUSHCHANGELOG.md)
+
+
+### September 20, 2022
+* [CleverTap Android SDK v4.6.3](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
+* Note: Kindly upgrade to version CleverTap Android SDK v4.6.3 and above if you face any issues with app inbox
+
 ### September 13, 2022
 * [CleverTap Android SDK v4.6.2](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTCORECHANGELOG.md)
 * [CleverTap Push Templates SDK v1.0.5](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/CTPUSHTEMPLATESCHANGELOG.md)
+* Note: Kindly upgrade to version CleverTap Android SDK v4.6.3 and above if you face any issues with app inbox
 
 
 ### September 6, 2022

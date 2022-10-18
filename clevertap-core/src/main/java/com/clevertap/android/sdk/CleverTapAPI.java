@@ -1,11 +1,13 @@
 package com.clevertap.android.sdk;
 
 import static android.content.Context.NOTIFICATION_SERVICE;
-import static com.clevertap.android.sdk.Utils.getDCDomain;
+import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
+import static com.clevertap.android.sdk.Utils.getSCDomain;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.FCM_LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.LOG_TAG;
 import static com.clevertap.android.sdk.pushnotification.PushConstants.PushType.FCM;
 
+import android.annotation.SuppressLint;
 import android.app.Activity;
 import android.app.NotificationChannel;
 import android.app.NotificationChannelGroup;
@@ -20,7 +22,6 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
-
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -32,13 +33,14 @@ import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
 import com.clevertap.android.sdk.events.EventDetail;
 import com.clevertap.android.sdk.events.EventGroup;
 import com.clevertap.android.sdk.featureFlags.CTFeatureFlagsController;
+import com.clevertap.android.sdk.inapp.CTLocalInApp;
 import com.clevertap.android.sdk.inbox.CTInboxActivity;
 import com.clevertap.android.sdk.inbox.CTInboxMessage;
 import com.clevertap.android.sdk.inbox.CTMessageDAO;
-import com.clevertap.android.sdk.interfaces.DCDomainCallback;
 import com.clevertap.android.sdk.interfaces.NotificationHandler;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
+import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.network.NetworkManager;
 import com.clevertap.android.sdk.product_config.CTProductConfigController;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -132,7 +134,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
 
     private static NotificationHandler sNotificationHandler;
 
-    private static NotificationHandler sDirectCallNotificationHandler;
+    private static NotificationHandler sSignedCallNotificationHandler;
 
     private final Context context;
 
@@ -1032,6 +1034,46 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
     }
 
+    /**
+     * Checks whether notification permission is granted or denied for Android 13 and above devices.
+     * @return boolean Returns true/false based on whether permission is granted or denied.
+     */
+    @SuppressLint("NewApi")
+    public boolean isPushPermissionGranted(){
+        if (isPackageAndOsTargetsAbove(context, 32)) {
+            return coreState.getInAppController().isPushPermissionGranted();
+        } else {
+            return false;
+        }
+    }
+
+    /**
+     * Calls the push primer flow for Android 13 and above devices.
+     * @param jsonObject JSONObject - Accepts jsonObject created by {@link CTLocalInApp} object
+     */
+    @SuppressLint("NewApi")
+    public void promptPushPrimer(JSONObject jsonObject) {
+        if (isPackageAndOsTargetsAbove(context, 32)) {
+            coreState.getInAppController().promptPushPrimer(jsonObject);
+        } else {
+            Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");
+        }
+    }
+
+    /**
+     * Calls directly hard permission dialog, if push primer is not required.
+     * @param showFallbackSettings - boolean - If `showFallbackSettings` is true then we show a alert
+     *                             dialog which routes to app's notification settings page.
+     */
+    @SuppressLint("NewApi")
+    public void promptForPushPermission(boolean showFallbackSettings){
+        if (isPackageAndOsTargetsAbove(context, 32)) {
+            coreState.getInAppController().promptPermission(showFallbackSettings);
+        } else {
+            Logger.v("Ensure your app supports Android 13 to verify permission access for notifications.");
+        }
+    }
+
     // Initialize
     private CleverTapAPI(final Context context, final CleverTapInstanceConfig config, String cleverTapID) {
         this.context = context;
@@ -1220,31 +1262,22 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Returns the DCDomainCallback object
-     *
-     * @return The {@link DCDomainCallback} object
-     */
-    @RestrictTo(Scope.LIBRARY_GROUP)
-    public DCDomainCallback getDCDomainCallback() {
-        return coreState.getCallbackManager().getDCDomainCallback();
-    }
-
-    /**
-     * This method is used to set the DCDomain callback
+     * This method is used to set the SCDomain callback.
+     * <p>
      * Register to handle the domain related events from CleverTap
-     * This is to be used only by clevertap-directCall-sdk
+     * This is to be used only by clevertap-signedcall-sdk
      *
-     * @param dcDomainCallback The {@link DCDomainCallback} instance
+     * @param scDomainListener - the {@link SCDomainListener} instance
      */
     @RestrictTo(Scope.LIBRARY_GROUP)
-    public void setDCDomainCallback(DCDomainCallback dcDomainCallback) {
-        coreState.getCallbackManager().setDCDomainCallback(dcDomainCallback);
+    public void setSCDomainListener(SCDomainListener scDomainListener) {
+        coreState.getCallbackManager().setSCDomainListener(scDomainListener);
 
         if(coreState.getNetworkManager() != null) {
             NetworkManager networkManager = (NetworkManager) coreState.getNetworkManager();
             String domain = networkManager.getDomainFromPrefsOrMetadata(EventGroup.REGULAR);
             if(domain != null) {
-                dcDomainCallback.onDCDomainAvailable(getDCDomain(domain));
+                scDomainListener.onSCDomainAvailable(getSCDomain(domain));
             }
         }
     }
@@ -1584,8 +1617,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return coreState.getLocalDataStore().getEventHistory(context);
     }
 
-    //DeepLink
-
     /**
      * Returns the InAppNotificationListener object
      *
@@ -1604,6 +1635,28 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings({"unused"})
     public void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener) {
         coreState.getCallbackManager().setInAppNotificationListener(inAppNotificationListener);
+    }
+
+    /**
+     * Returns the PushPermissionNotificationResponseListener object
+     *
+     * @return An {@link PushPermissionResponseListener} object
+     */
+    @SuppressWarnings({"unused", "WeakerAccess"})
+    public PushPermissionResponseListener getPushPermissionNotificationResponseListener() {
+        return coreState.getCallbackManager().getPushPermissionNotificationResponseListener();
+    }
+
+    /**
+     * This method sets the PushPermissionNotificationResponseListener
+     *
+     * @param pushPermissionResponseListener An {@link PushPermissionResponseListener} object
+     */
+    @SuppressWarnings({"unused"})
+    public void setPushPermissionNotificationResponseListener(PushPermissionResponseListener
+                                                                          pushPermissionResponseListener) {
+        coreState.getCallbackManager().
+                setPushPermissionNotificationResponseListener(pushPermissionResponseListener);
     }
 
     /**
@@ -2096,16 +2149,16 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     }
 
     /**
-     * Pushes a Direct Call event to CleverTap with a set of attribute pairs.
+     * Pushes a Signed Call event to CleverTap with a set of attribute pairs.
      *
      * @param eventName    The name of the event
      * @param eventProperties The {@link JSONObject} object that contains the
-     *                           event properties regarding Direct Call event
+     *                           event properties regarding Signed Call event
      */
     @SuppressWarnings("unused")
-    public Future<?> pushDirectCallEvent(String eventName, JSONObject eventProperties) {
+    public Future<?> pushSignedCallEvent(String eventName, JSONObject eventProperties) {
         return coreState.getAnalyticsManager()
-                .raiseEventForDirectCall(eventName, eventProperties);
+                .raiseEventForSignedCall(eventName, eventProperties);
     }
 
     /**
@@ -2351,8 +2404,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         return sNotificationHandler;
     }
 
-    public static NotificationHandler getDirectCallNotificationHandler() {
-        return sDirectCallNotificationHandler;
+    public static NotificationHandler getSignedCallNotificationHandler() {
+        return sSignedCallNotificationHandler;
     }
 
     /**
@@ -2404,6 +2457,11 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     public void setInAppNotificationButtonListener(InAppNotificationButtonListener listener) {
         coreState.getCallbackManager().setInAppNotificationButtonListener(listener);
+    }
+
+    @SuppressWarnings("unused")
+    public void setPushPrimerButtonListener(PushPrimerButtonListener listener) {
+        coreState.getCallbackManager().setPushPrimerButtonListener(listener);
     }
 
     @SuppressWarnings("unused")
@@ -2857,13 +2915,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         sNotificationHandler = notificationHandler;
     }
 
-
-    public static void setDirectCallNotificationHandler(NotificationHandler notificationHandler) {
-        sDirectCallNotificationHandler = notificationHandler;
-    }
-
-    public static void handleMessage(String pushType) {
-
+    public static void setSignedCallNotificationHandler(NotificationHandler notificationHandler) {
+        sSignedCallNotificationHandler = notificationHandler;
     }
 
     /**

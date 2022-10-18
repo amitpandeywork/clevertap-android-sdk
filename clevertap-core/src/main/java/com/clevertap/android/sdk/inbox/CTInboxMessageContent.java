@@ -280,10 +280,28 @@ public class CTInboxMessageContent implements Parcelable {
             return null;
         }
         try {
+            //TODO REMOVE THIS AFTER TESTING AND BACKEND CHANGE IS INCLUDED
+            if (jsonObject.getString(Constants.KEY_TEXT).contains("Allow")){
+                jsonObject.put(Constants.KEY_TYPE, Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION);
+                jsonObject.put(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS, true);
+            }
             return jsonObject.has(Constants.KEY_TYPE) ? jsonObject.getString(Constants.KEY_TYPE) : "";
         } catch (JSONException e) {
             Logger.v("Unable to get Link Type with JSON - " + e.getLocalizedMessage());
             return null;
+        }
+    }
+
+    public boolean isFallbackSettingsEnabled(JSONObject jsonObject) {
+        if (jsonObject == null) {
+            return false;
+        }
+        try {
+            return jsonObject.has(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) ?
+                    jsonObject.getBoolean(Constants.KEY_FALLBACK_NOTIFICATION_SETTINGS) : false;
+        } catch (JSONException e) {
+            Logger.v("Unable to get fallback settings key with JSON - " + e.getLocalizedMessage());
+            return false;
         }
     }
 

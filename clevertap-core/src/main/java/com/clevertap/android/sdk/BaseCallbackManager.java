@@ -2,7 +2,7 @@ package com.clevertap.android.sdk;
 
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import com.clevertap.android.sdk.interfaces.DCDomainCallback;
+import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -22,11 +22,15 @@ public abstract class BaseCallbackManager {
 
     public abstract GeofenceCallback getGeofenceCallback();
 
-    public abstract DCDomainCallback getDCDomainCallback();
+    public abstract SCDomainListener getSCDomainListener();
 
     public abstract InAppNotificationButtonListener getInAppNotificationButtonListener();
 
+    public abstract PushPrimerButtonListener getPushPrimerButtonListener();
+
     public abstract InAppNotificationListener getInAppNotificationListener();
+
+    public abstract PushPermissionResponseListener getPushPermissionNotificationResponseListener();
 
     public abstract CTInboxListener getInboxListener();
 
@@ -53,12 +57,16 @@ public abstract class BaseCallbackManager {
 
     public abstract void setGeofenceCallback(GeofenceCallback geofenceCallback);
 
-    public abstract void setDCDomainCallback(DCDomainCallback dcDomainCallback);
+    public abstract void setSCDomainListener(SCDomainListener scDomainListener);
 
     public abstract void setInAppNotificationButtonListener(
             InAppNotificationButtonListener inAppNotificationButtonListener);
 
+    public abstract void setPushPrimerButtonListener(PushPrimerButtonListener pushPrimerButtonListener);
+
     public abstract void setInAppNotificationListener(InAppNotificationListener inAppNotificationListener);
+
+    public abstract void setPushPermissionNotificationResponseListener(PushPermissionResponseListener pushPermissionNotificationResponseListener);
 
     public abstract void setInboxListener(CTInboxListener inboxListener);
 

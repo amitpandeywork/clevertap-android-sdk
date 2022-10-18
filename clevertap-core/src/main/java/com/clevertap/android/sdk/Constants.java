@@ -63,9 +63,9 @@ public interface Constants {
     String ICON_BASE_URL = "http://static.wizrocket.com/android/ico/";
     String NOTIFICATION_CLICKED_EVENT_NAME = "Notification Clicked";
     String NOTIFICATION_VIEWED_EVENT_NAME = "Notification Viewed";
-    String DC_OUTGOING_EVENT_NAME = "DCOutgoing";
-    String DC_INCOMING_EVENT_NAME = "DCIncoming";
-    String DC_END_EVENT_NAME = "DCEnd";
+    String SC_OUTGOING_EVENT_NAME = "SCOutgoing";
+    String SC_INCOMING_EVENT_NAME = "SCIncoming";
+    String SC_END_EVENT_NAME = "SCEnd";
     String GEOFENCE_ENTERED_EVENT_NAME = "Geocluster Entered";
     String GEOFENCE_EXITED_EVENT_NAME = "Geocluster Exited";
     String APP_LAUNCHED_EVENT = "App Launched";
@@ -174,6 +174,8 @@ public interface Constants {
     String KEY_TDC = "tdc";
     String KEY_KV = "kv";
     String KEY_TYPE = "type";
+    String KEY_FALLBACK_NOTIFICATION_SETTINGS = "fbSettings";
+    String KEY_REQUEST_FOR_NOTIFICATION_PERMISSION = "rfp";
     String KEY_IS_TABLET = "tablet";
     String KEY_BG = "bg";
     String KEY_TITLE = "title";
@@ -218,6 +220,8 @@ public interface Constants {
     String BLACK = "#000000";
     String WHITE = "#FFFFFF";
     String BLUE = "#0000FF";
+    String GREEN = "#00FF00";
+    String LIGHT_BLUE = "#818ce5";
     /**
      * Profile command constants.
      */
@@ -256,7 +260,7 @@ public interface Constants {
     String LOG_TAG_PRODUCT_CONFIG = "Product Config : ";
     int FETCH_TYPE_PC = 0;
     int FETCH_TYPE_FF = 1;
-    String LOG_TAG_DIRECT_CALL = "DirectCall : ";
+    String LOG_TAG_SIGNED_CALL = "SignedCall : ";
     String LOG_TAG_GEOFENCES = "Geofences : ";
     // error message codes
     int INVALID_MULTI_VALUE = 1;

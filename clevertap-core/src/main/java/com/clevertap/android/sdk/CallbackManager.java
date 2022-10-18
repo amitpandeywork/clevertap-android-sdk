@@ -6,7 +6,7 @@ import androidx.annotation.RestrictTo;
 import androidx.annotation.RestrictTo.Scope;
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener;
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit;
-import com.clevertap.android.sdk.interfaces.DCDomainCallback;
+import com.clevertap.android.sdk.interfaces.SCDomainListener;
 import com.clevertap.android.sdk.interfaces.NotificationRenderedListener;
 import com.clevertap.android.sdk.interfaces.OnInitCleverTapIDListener;
 import com.clevertap.android.sdk.product_config.CTProductConfigListener;
@@ -22,11 +22,14 @@ public class CallbackManager extends BaseCallbackManager {
 
     private GeofenceCallback geofenceCallback;
 
-    private DCDomainCallback dcDomainCallback;
+    private SCDomainListener scDomainListener;
 
     private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
+    private WeakReference<PushPrimerButtonListener> pushPrimerButtonListener;
 
     private InAppNotificationListener inAppNotificationListener;
+
+    private PushPermissionResponseListener pushPermissionNotificationResponseListener;
 
     private CTInboxListener inboxListener;
 
@@ -103,13 +106,13 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public DCDomainCallback getDCDomainCallback() {
-        return dcDomainCallback;
+    public SCDomainListener getSCDomainListener() {
+        return scDomainListener;
     }
 
     @Override
-    public void setDCDomainCallback(DCDomainCallback dcDomainCallback) {
-        this.dcDomainCallback = dcDomainCallback;
+    public void setSCDomainListener(SCDomainListener scDomainListener) {
+        this.scDomainListener = scDomainListener;
     }
 
     @Override
@@ -121,9 +124,22 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
+    public PushPrimerButtonListener getPushPrimerButtonListener() {
+        if (pushPrimerButtonListener != null && pushPrimerButtonListener.get() != null){
+            return pushPrimerButtonListener.get();
+        }
+        return null;
+    }
+
+    @Override
     public void setInAppNotificationButtonListener(
             InAppNotificationButtonListener inAppNotificationButtonListener) {
         this.inAppNotificationButtonListener = new WeakReference<>(inAppNotificationButtonListener);
+    }
+
+    @Override
+    public void setPushPrimerButtonListener(PushPrimerButtonListener pushPrimerButtonListener) {
+        this.pushPrimerButtonListener = new WeakReference<>(pushPrimerButtonListener);
     }
 
     @Override
@@ -132,8 +148,18 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
+    public PushPermissionResponseListener getPushPermissionNotificationResponseListener() {
+        return pushPermissionNotificationResponseListener;
+    }
+
+    @Override
     public void setInAppNotificationListener(final InAppNotificationListener inAppNotificationListener) {
         this.inAppNotificationListener = inAppNotificationListener;
+    }
+
+    @Override
+    public void setPushPermissionNotificationResponseListener(PushPermissionResponseListener pushPermissionNotificationResponseListener) {
+        this.pushPermissionNotificationResponseListener = pushPermissionNotificationResponseListener;
     }
 
     @Override

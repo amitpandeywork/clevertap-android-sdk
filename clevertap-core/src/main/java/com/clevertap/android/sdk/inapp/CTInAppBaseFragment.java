@@ -10,6 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
+import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import java.lang.ref.WeakReference;
@@ -60,14 +61,14 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     abstract void cleanup();
 
-    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
+    void didClick(int index, Bundle data, HashMap<String, String> keyValueMap) {
         InAppListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
+            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap,index);
         }
     }
 
-    void didDismiss(Bundle data) {
+    public void didDismiss(Bundle data) {
         cleanup();
         InAppListener listener = getListener();
         if (listener != null && getActivity() != null && getActivity().getBaseContext() != null) {
@@ -138,14 +139,30 @@ public abstract class CTInAppBaseFragment extends Fragment {
             data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
             data.putString(Constants.KEY_C2A, button.getText());
 
-            didClick(data, button.getKeyValues());
+            didClick(index,data, button.getKeyValues());
 
+            if (index == 0 && inAppNotification.isLocalInApp()) {
+                ((InAppNotificationActivity) context).showHardPermissionPrompt();
+                return;
+            }else if (index == 1 && inAppNotification.isLocalInApp()){
+                didDismiss(data);
+                return;
+            }
+
+            if (button.getType() != null && button.getType().equalsIgnoreCase(
+                    Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
+                if (context instanceof  InAppNotificationActivity) {
+                    ((InAppNotificationActivity) context).showHardPermissionPrompt(button);
+                    return;
+                }
+            }
             String actionUrl = button.getActionUrl();
             if (actionUrl != null) {
                 fireUrlThroughIntent(actionUrl, data);
                 return;
             }
             didDismiss(data);
+
         } catch (Throwable t) {
             config.getLogger().debug("Error handling notification button click: " + t.getCause());
             didDismiss(null);
