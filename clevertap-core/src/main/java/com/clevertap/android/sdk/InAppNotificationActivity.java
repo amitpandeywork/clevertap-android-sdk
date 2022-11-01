@@ -1,8 +1,7 @@
 package com.clevertap.android.sdk;
 
-import static com.clevertap.android.sdk.CTXtensions.isPackageAndOsTargetsAbove;
+import static com.clevertap.android.sdk.Constants.NOTIFICATION_PERMISSION_REQUEST_CODE;
 import static com.clevertap.android.sdk.inapp.InAppController.DISPLAY_HARD_PERMISSION_BUNDLE_KEY;
-import static com.clevertap.android.sdk.inapp.InAppController.IS_FIRST_TIME_PERMISSION_REQUEST;
 import static com.clevertap.android.sdk.inapp.InAppController.SHOW_FALLBACK_SETTINGS_BUNDLE_KEY;
 
 import android.Manifest;
@@ -17,11 +16,8 @@ import android.net.Uri;
 import android.os.Bundle;
 import android.view.WindowManager;
 import androidx.annotation.NonNull;
-import androidx.annotation.RequiresApi;
-import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
 import androidx.fragment.app.FragmentActivity;
-import com.clevertap.android.sdk.inapp.AlertDialogPromptForSettings;
 import com.clevertap.android.sdk.inapp.CTInAppBaseFullFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlCoverFragment;
 import com.clevertap.android.sdk.inapp.CTInAppHtmlHalfInterstitialFragment;
@@ -33,14 +29,13 @@ import com.clevertap.android.sdk.inapp.CTInAppNativeHalfInterstitialImageFragmen
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNativeInterstitialImageFragment;
 import com.clevertap.android.sdk.inapp.CTInAppNotification;
-import com.clevertap.android.sdk.inapp.CTInAppNotificationButton;
 import com.clevertap.android.sdk.inapp.CTInAppType;
 import com.clevertap.android.sdk.inapp.InAppListener;
 import java.lang.ref.WeakReference;
 import java.util.HashMap;
-import kotlin.Unit;
 
-public final class InAppNotificationActivity extends FragmentActivity implements InAppListener {
+public final class InAppNotificationActivity extends FragmentActivity implements InAppListener,
+        DidClickForHardPermissionListener {
 
     private static boolean isAlertVisible = false;
 
@@ -50,21 +45,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     private WeakReference<InAppListener> listenerWeakReference;
 
-    private WeakReference<PermissionCallback> permissionCallbackWeakReference;
+    private WeakReference<PushPermissionResultCallback> pushPermissionResultCallbackWeakReference;
 
-    private static final int PERMISSION_REQUEST_CODE = 2;
+    private PushPermissionManager pushPermissionManager;
 
-    public static final String ANDROID_PERMISSION_STRING = "android.permission.POST_NOTIFICATIONS";
+    public interface PushPermissionResultCallback {
 
-    private boolean isFallbackSettingsEnabled;
+        void onPushPermissionAccept();
 
-    private boolean shouldShowFallbackSettings;
-
-    public interface PermissionCallback {
-
-        void onAccept();
-
-        void onReject();
+        void onPushPermissionDeny();
     }
 
     public void onCreate(Bundle savedInstanceState) {
@@ -85,15 +74,17 @@ public final class InAppNotificationActivity extends FragmentActivity implements
             if (configBundle != null) {
                 config = configBundle.getParcelable("config");
             }
-            setListener(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
 
+            setListener(CleverTapAPI.instanceWithConfig(this, config).getCoreState().getInAppController());
             setPermissionCallback(CleverTapAPI.instanceWithConfig(this, config).getCoreState()
                     .getInAppController());
 
+            pushPermissionManager = new PushPermissionManager(this, config);
+
             if (showHardNotificationPermission) {
-                shouldShowFallbackSettings = notif.getBoolean(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY,
+                boolean shouldShowFallbackSettings = notif.getBoolean(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY,
                         false);
-                showHardPermissionPrompt();
+                showHardPermissionPrompt(shouldShowFallbackSettings);
                 return;
             }
         } catch (Throwable t) {
@@ -148,6 +139,23 @@ public final class InAppNotificationActivity extends FragmentActivity implements
     }
 
     @Override
+    protected void onResume() {
+        super.onResume();
+        if (pushPermissionManager.isFromNotificationSettingsActivity()){
+            if (android.os.Build.VERSION.SDK_INT >= android.os.Build.VERSION_CODES.TIRAMISU) {
+                int permissionStatus = ContextCompat.checkSelfPermission(this,
+                        Manifest.permission.POST_NOTIFICATIONS);
+                if (permissionStatus == PackageManager.PERMISSION_GRANTED){
+                    pushPermissionResultCallbackWeakReference.get().onPushPermissionAccept();
+                } else {
+                    pushPermissionResultCallbackWeakReference.get().onPushPermissionDeny();
+                }
+                didDismiss(null);
+            }
+        }
+    }
+
+    @Override
     public void finish() {
         super.finish();
         overridePendingTransition(android.R.anim.fade_in, android.R.anim.fade_out);
@@ -155,8 +163,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
 
     @Override
     public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
-            HashMap<String, String> keyValueMap, int btnClickIndex) {
-        didClick(formData, keyValueMap, btnClickIndex);
+            HashMap<String, String> keyValueMap) {
+        didClick(formData, keyValueMap);
     }
 
     @Override
@@ -183,100 +191,41 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         super.setTheme(android.R.style.Theme_Translucent_NoTitleBar);
     }
 
-    void didClick(Bundle data, HashMap<String, String> keyValueMap, int btnClickIndex) {
+    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
         InAppListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap, btnClickIndex);
+            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
         }
+    }
+
+    @Override
+    public void didClickForHardPermissionWithFallbackSettings(boolean fallbackToSettings) {
+        showHardPermissionPrompt(fallbackToSettings);
     }
 
     @SuppressLint("NewApi")
-    public void showHardPermissionPrompt() {
-        if (isPackageAndOsTargetsAbove(this, 32)) {
-            requestPermission();
-        }
-    }
-
-    @SuppressLint("NewApi")
-    public void showHardPermissionPrompt(CTInAppNotificationButton ctInAppNotificationButton){
-        if (isPackageAndOsTargetsAbove(this, 32)) {
-            if (ctInAppNotificationButton != null) {
-                isFallbackSettingsEnabled = ctInAppNotificationButton.isFallbackToSettings();
-            }
-            requestPermission();
-        }
-    }
-
-    @RequiresApi(api = 33)
-    public void requestPermission() {
-        int permissionStatus = ContextCompat.checkSelfPermission(InAppNotificationActivity.this,
-                Manifest.permission.POST_NOTIFICATIONS);
-
-        if (permissionStatus == PackageManager.PERMISSION_DENIED){
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(InAppNotificationActivity.this,
-                    IS_FIRST_TIME_PERMISSION_REQUEST,true);
-            if (!isFirstTimeRequest) {
-                if (shouldShowFallbackAlertDialog()){
-                    showFallbackAlertDialog();
-                    return;
-                }
-                permissionCallbackWeakReference.get().onReject();
-                didDismiss(null);
-                return;
-            }
-
-            ActivityCompat.requestPermissions(InAppNotificationActivity.this,
-                    new String[]{ANDROID_PERMISSION_STRING}, PERMISSION_REQUEST_CODE);
-        }else{
-            permissionCallbackWeakReference.get().onAccept();
-            didDismiss(null);
-        }
-    }
-
-    /**
-     * This method will show `showFallbackAlertDialog()` if any of the below conditions are satisfied
-     * 1)When `isFbSettings` true.`isFbSettings` key is available from IAM campaign.
-     * 2)When `showFbSettings` is true.`showFbSettings` key is available when hard push permission flow is called.
-     * 3)When `inAppNotification.fallBackToNotificationSettings()` is true.
-     * `inAppNotification.fallBackToNotificationSettings()` is available when push primer flow is called.
-     *
-     * @return boolean
-     */
-    private boolean shouldShowFallbackAlertDialog() {
-        if (isFallbackSettingsEnabled){
-            return true;
-        }else if (shouldShowFallbackSettings){
-            return true;
-        }else return inAppNotification != null && inAppNotification.fallBackToNotificationSettings();
+    public void showHardPermissionPrompt(boolean isFallbackSettingsEnabled){
+        pushPermissionManager.showHardPermissionPrompt(isFallbackSettingsEnabled,
+                pushPermissionResultCallbackWeakReference.get());
     }
 
     @Override
     public void onRequestPermissionsResult(int requestCode, @NonNull String[] permissions,
                                            @NonNull int[] grantResults) {
         super.onRequestPermissionsResult(requestCode, permissions, grantResults);
-        StorageHelper.putBoolean(InAppNotificationActivity.this,IS_FIRST_TIME_PERMISSION_REQUEST,
-                false);
-        if (requestCode == PERMISSION_REQUEST_CODE) {
+        CTPreferenceCache.getInstance(this, config).setFirstTimeRequest(false);
+        CTPreferenceCache.updateCacheToDisk(this, config);
+
+        if (requestCode == NOTIFICATION_PERMISSION_REQUEST_CODE) {
             boolean granted = grantResults.length > 0 && grantResults[0] ==
                     PackageManager.PERMISSION_GRANTED;
             if (granted) {
-                permissionCallbackWeakReference.get().onAccept();
-            }else {
-                permissionCallbackWeakReference.get().onReject();
+                pushPermissionResultCallbackWeakReference.get().onPushPermissionAccept();
+            } else {
+                pushPermissionResultCallbackWeakReference.get().onPushPermissionDeny();
             }
             didDismiss(null);
         }
-    }
-
-    public void showFallbackAlertDialog() {
-        AlertDialogPromptForSettings.show(this, () -> {
-            Utils.navigateToAndroidSettingsForNotifications(InAppNotificationActivity.this);
-            didDismiss(null);
-            return Unit.INSTANCE;
-        }, () -> {
-            didDismiss(null);
-            return Unit.INSTANCE;
-        });
     }
 
     void didDismiss(Bundle data) {
@@ -325,8 +274,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
         listenerWeakReference = new WeakReference<>(listener);
     }
 
-    public void setPermissionCallback(PermissionCallback callback) {
-        permissionCallbackWeakReference = new WeakReference<>(callback);
+    public void setPermissionCallback(PushPermissionResultCallback callback) {
+        pushPermissionResultCallbackWeakReference = new WeakReference<>(callback);
     }
 
     private CTInAppBaseFullFragment createContentFragment() {
@@ -387,7 +336,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                         inAppNotification.getCampaignId());
                                                 data.putString("wzrk_c2a",
                                                         inAppNotification.getButtons().get(0).getText());
-                                                didClick(data, null, 0);
+                                                didClick(data, null);
                                                 String actionUrl = inAppNotification.getButtons().get(0)
                                                         .getActionUrl();
                                                 if (actionUrl != null) {
@@ -395,15 +344,15 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                     return;
                                                 }
                                                 if (inAppNotification.isLocalInApp()) {
-                                                    showHardPermissionPrompt();
+                                                    showHardPermissionPrompt(inAppNotification.fallBackToNotificationSettings());
                                                     return;
                                                 }
 
                                                 if (inAppNotification.getButtons().get(0).getType() != null &&
                                                         inAppNotification.getButtons().get(0).getType()
                                                         .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
-                                                    showHardPermissionPrompt(
-                                                            inAppNotification.getButtons().get(0));
+                                                    showHardPermissionPrompt(inAppNotification.
+                                                            getButtons().get(0).isFallbackToSettings());
                                                     return;
                                                 }
 
@@ -422,7 +371,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                     inAppNotification.getCampaignId());
                                             data.putString("wzrk_c2a",
                                                     inAppNotification.getButtons().get(1).getText());
-                                            didClick(data, null, 1);
+                                            didClick(data, null);
                                             String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
                                             if (actionUrl != null) {
                                                 fireUrlThroughIntent(actionUrl, data);
@@ -432,7 +381,8 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                             if (inAppNotification.getButtons().get(1).getType() != null &&
                                                     inAppNotification.getButtons().get(1).getType()
                                                     .equalsIgnoreCase(Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
-                                                showHardPermissionPrompt(inAppNotification.getButtons().get(1));
+                                                showHardPermissionPrompt(inAppNotification.
+                                                        getButtons().get(1).isFallbackToSettings());
                                                 return;
                                             }
 
@@ -454,7 +404,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                         inAppNotification.getCampaignId());
                                                 data.putString("wzrk_c2a",
                                                         inAppNotification.getButtons().get(0).getText());
-                                                didClick(data, null, 0);
+                                                didClick(data, null);
                                                 String actionUrl = inAppNotification.getButtons().get(0)
                                                         .getActionUrl();
                                                 if (actionUrl != null) {
@@ -476,7 +426,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                                     inAppNotification.getCampaignId());
                                             data.putString("wzrk_c2a",
                                                     inAppNotification.getButtons().get(1).getText());
-                                            didClick(data, null, 1);
+                                            didClick(data, null);
                                             String actionUrl = inAppNotification.getButtons().get(1).getActionUrl();
                                             if (actionUrl != null) {
                                                 fireUrlThroughIntent(actionUrl, data);
@@ -498,7 +448,7 @@ public final class InAppNotificationActivity extends FragmentActivity implements
                                         data.putString(Constants.NOTIFICATION_ID_TAG,
                                                 inAppNotification.getCampaignId());
                                         data.putString("wzrk_c2a", inAppNotification.getButtons().get(2).getText());
-                                        didClick(data, null, 2);
+                                        didClick(data, null);
                                         String actionUrl = inAppNotification.getButtons().get(2).getActionUrl();
                                         if (actionUrl != null) {
                                             fireUrlThroughIntent(actionUrl, data);

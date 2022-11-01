@@ -1,6 +1,7 @@
 package com.clevertap.demo
 
 
+import android.app.NotificationManager
 import android.content.Context
 
 import android.content.Intent
@@ -33,7 +34,7 @@ private const val TAG = "HomeScreenActivity"
 class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitListener, CTProductConfigListener,
     CTFeatureFlagsListener, SyncListener, InAppNotificationListener,
     PushPermissionResponseListener,
-    InAppNotificationButtonListener, PushPrimerButtonListener {
+    InAppNotificationButtonListener {
 
     var cleverTapDefaultInstance: CleverTapAPI? = null
 
@@ -149,8 +150,6 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
 
             pushPermissionNotificationResponseListener = this@HomeScreenActivity
 
-            setPushPrimerButtonListener(this@HomeScreenActivity)
-
         }
 
         //With CleverTap Android SDK v3.2.0 you can create additional instances to send data to multiple CleverTap accounts
@@ -264,20 +263,23 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         Log.i(TAG, "InApp---> response() called  $accepted")
         if(accepted){
             Toast.makeText(this, "Permission granted!", Toast.LENGTH_SHORT).show()
+
+            //For Android 13+ we need to create notification channel after notification permission is accepted
+            CleverTapAPI.createNotificationChannel(
+                this, "BRTesting", "Core",
+                "Core notifications", NotificationManager.IMPORTANCE_MAX, true
+            )
+
+            CleverTapAPI.createNotificationChannel(
+                this, "PTTesting", "Push templates",
+                "All push templates", NotificationManager.IMPORTANCE_MAX, true
+            )
         }else{
             Toast.makeText(this, "Permission denied!", Toast.LENGTH_SHORT).show()
         }
     }
 
     override fun onInAppButtonClick(payload: HashMap<String, String>?) {
-        TODO("Not yet implemented")
-    }
-
-    override fun onPositiveButtonClick(ctInAppNotification: CTInAppNotification?) {
-        Log.i(TAG, "onPositiveButtonClick() called")
-    }
-
-    override fun onNegativeButtonClick(ctInAppNotification: CTInAppNotification?) {
-        Log.i(TAG, "onNegativeButtonClick() called")
+        Log.i(TAG, "onInAppButtonClick() called")
     }
 }

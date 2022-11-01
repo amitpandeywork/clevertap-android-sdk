@@ -10,7 +10,7 @@ import androidx.annotation.Nullable;
 import androidx.fragment.app.Fragment;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
-import com.clevertap.android.sdk.InAppNotificationActivity;
+import com.clevertap.android.sdk.DidClickForHardPermissionListener;
 import com.clevertap.android.sdk.Utils;
 import com.clevertap.android.sdk.customviews.CloseImageView;
 import java.lang.ref.WeakReference;
@@ -42,15 +42,20 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     private WeakReference<InAppListener> listenerWeakReference;
 
+    private DidClickForHardPermissionListener didClickForHardPermissionListener;
+
     @Override
     public void onAttach(Context context) {
         super.onAttach(context);
         this.context = context;
         Bundle bundle = getArguments();
-        inAppNotification = bundle.getParcelable(Constants.INAPP_KEY);
-        config = bundle.getParcelable(Constants.KEY_CONFIG);
-        currentOrientation = getResources().getConfiguration().orientation;
-        generateListener();
+        if (bundle != null) {
+            inAppNotification = bundle.getParcelable(Constants.INAPP_KEY);
+            config = bundle.getParcelable(Constants.KEY_CONFIG);
+            currentOrientation = getResources().getConfiguration().orientation;
+            generateListener();
+            didClickForHardPermissionListener = (DidClickForHardPermissionListener) getActivity();
+        }
     }
 
     @Override
@@ -61,10 +66,10 @@ public abstract class CTInAppBaseFragment extends Fragment {
 
     abstract void cleanup();
 
-    void didClick(int index, Bundle data, HashMap<String, String> keyValueMap) {
+    void didClick(Bundle data, HashMap<String, String> keyValueMap) {
         InAppListener listener = getListener();
         if (listener != null) {
-            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap,index);
+            listener.inAppNotificationDidClick(inAppNotification, data, keyValueMap);
         }
     }
 
@@ -139,22 +144,22 @@ public abstract class CTInAppBaseFragment extends Fragment {
             data.putString(Constants.NOTIFICATION_ID_TAG, inAppNotification.getCampaignId());
             data.putString(Constants.KEY_C2A, button.getText());
 
-            didClick(index,data, button.getKeyValues());
+            didClick(data, button.getKeyValues());
 
             if (index == 0 && inAppNotification.isLocalInApp()) {
-                ((InAppNotificationActivity) context).showHardPermissionPrompt();
+                didClickForHardPermissionListener.didClickForHardPermissionWithFallbackSettings(
+                        inAppNotification.fallBackToNotificationSettings());
                 return;
             }else if (index == 1 && inAppNotification.isLocalInApp()){
                 didDismiss(data);
                 return;
             }
 
-            if (button.getType() != null && button.getType().equalsIgnoreCase(
+            if (button.getType() != null && button.getType().contains(
                     Constants.KEY_REQUEST_FOR_NOTIFICATION_PERMISSION)){
-                if (context instanceof  InAppNotificationActivity) {
-                    ((InAppNotificationActivity) context).showHardPermissionPrompt(button);
-                    return;
-                }
+                didClickForHardPermissionListener.
+                        didClickForHardPermissionWithFallbackSettings(button.isFallbackToSettings());
+                return;
             }
             String actionUrl = button.getActionUrl();
             if (actionUrl != null) {

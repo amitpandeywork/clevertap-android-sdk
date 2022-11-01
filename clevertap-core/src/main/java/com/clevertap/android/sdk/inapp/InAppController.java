@@ -1,7 +1,8 @@
 package com.clevertap.android.sdk.inapp;
 
-import static com.clevertap.android.sdk.InAppNotificationActivity.ANDROID_PERMISSION_STRING;
+import static com.clevertap.android.sdk.PushPermissionManager.ANDROID_PERMISSION_STRING;
 import static com.clevertap.android.sdk.inapp.CTLocalInApp.FALLBACK_TO_NOTIFICATION_SETTINGS;
+
 import android.Manifest;
 import android.app.Activity;
 import android.content.Context;
@@ -10,7 +11,6 @@ import android.content.SharedPreferences;
 import android.content.pm.PackageManager;
 import android.os.Bundle;
 import android.os.Looper;
-
 import androidx.annotation.RequiresApi;
 import androidx.core.app.ActivityCompat;
 import androidx.core.content.ContextCompat;
@@ -19,10 +19,12 @@ import androidx.fragment.app.FragmentActivity;
 import androidx.fragment.app.FragmentTransaction;
 import com.clevertap.android.sdk.AnalyticsManager;
 import com.clevertap.android.sdk.BaseCallbackManager;
+import com.clevertap.android.sdk.CTPreferenceCache;
 import com.clevertap.android.sdk.CleverTapInstanceConfig;
 import com.clevertap.android.sdk.Constants;
 import com.clevertap.android.sdk.ControllerManager;
 import com.clevertap.android.sdk.CoreMetaData;
+import com.clevertap.android.sdk.DeviceInfo;
 import com.clevertap.android.sdk.InAppNotificationActivity;
 import com.clevertap.android.sdk.InAppNotificationListener;
 import com.clevertap.android.sdk.Logger;
@@ -43,10 +45,11 @@ import java.util.List;
 import java.util.Objects;
 import java.util.concurrent.Callable;
 import org.json.JSONArray;
+import org.json.JSONException;
 import org.json.JSONObject;
 
 public class InAppController implements CTInAppNotification.CTInAppNotificationListener, InAppListener,
-        InAppNotificationActivity.PermissionCallback {
+        InAppNotificationActivity.PushPermissionResultCallback {
 
     //InApp
     private final class NotificationPrepareRunnable implements Runnable {
@@ -110,6 +113,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     private final CoreMetaData coreMetaData;
 
+    private final DeviceInfo deviceInfo;
+
     private InAppState inAppState;
 
     private HashSet<String> inappActivityExclude = null;
@@ -119,6 +124,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     private final MainLooperHandler mainLooperHandler;
 
     public final static String LOCAL_INAPP_COUNT = "local_in_app_count";
+    public final static String IS_HARD_PERMISSION_REQUEST = "isHardPermissionRequest";
 
     public final static String IS_FIRST_TIME_PERMISSION_REQUEST = "firstTimeRequest";
     public final static String DISPLAY_HARD_PERMISSION_BUNDLE_KEY = "displayHardPermissionDialog";
@@ -130,7 +136,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             ControllerManager controllerManager,
             BaseCallbackManager callbackManager,
             AnalyticsManager analyticsManager,
-            CoreMetaData coreMetaData) {
+            CoreMetaData coreMetaData, final DeviceInfo deviceInfo) {
 
         this.context = context;
         this.config = config;
@@ -141,6 +147,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
         this.analyticsManager = analyticsManager;
         this.coreMetaData = coreMetaData;
         this.inAppState = InAppState.RESUMED;
+        this.deviceInfo = deviceInfo;
     }
 
     public void checkExistingInAppNotifications(Activity activity) {
@@ -186,47 +193,63 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @RequiresApi(api = 33)
     public void promptPushPrimer(JSONObject jsonObject){
+        PushPermissionResponseListener listener = callbackManager.
+                getPushPermissionResponseListener();
         int permissionStatus = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.POST_NOTIFICATIONS);
 
         if (permissionStatus == PackageManager.PERMISSION_DENIED){
             //Checks whether permission request is asked for the first time.
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(context,IS_FIRST_TIME_PERMISSION_REQUEST,true);
-            if (!isFirstTimeRequest) {
-                //If permission is already denied and FALLBACK_TO_NOTIFICATION_SETTINGS is false
-                if (!jsonObject.has(FALLBACK_TO_NOTIFICATION_SETTINGS)) {
+            boolean isFirstTimeRequest = CTPreferenceCache.getInstance(context, config).isFirstTimeRequest();
+
+            boolean shouldShowRequestPermissionRationale = ActivityCompat.shouldShowRequestPermissionRationale(
+                    Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+                    ANDROID_PERMISSION_STRING);
+
+            if (!isFirstTimeRequest && shouldShowRequestPermissionRationale){
+                if (!jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false)) {
                     Logger.v("Notification permission is denied. Please grant notification permission access" +
                             " in your app's settings to send notifications");
-                    return;
+                    if (listener != null) {
+                        listener.onPushPermissionResponse(false);
+                    }
+                } else {
+                    showSoftOrHardPrompt(jsonObject);
                 }
+                return;
             }
-            prepareNotificationForDisplay(jsonObject);
-        }else{
-            Logger.v("Notification permission is granted.");
+            showSoftOrHardPrompt(jsonObject);
+        } else {
+            //Notification permission is granted
+            if (listener != null) {
+                listener.onPushPermissionResponse(true);
+            }
         }
     }
 
     @RequiresApi(api = 33)
-    public void promptPermission(boolean showFallbackSettings){
-        int permissionStatus = ContextCompat.checkSelfPermission(context,
-                Manifest.permission.POST_NOTIFICATIONS);
+    public void promptPermission(boolean showFallbackSettings) {
+        JSONObject object = new JSONObject();
+        try {
+            object.put(FALLBACK_TO_NOTIFICATION_SETTINGS, showFallbackSettings);
+            object.put(IS_HARD_PERMISSION_REQUEST, true);
+        } catch (JSONException e) {
+            e.printStackTrace();
+        }
+        promptPushPrimer(object);
+    }
 
-        if (permissionStatus == PackageManager.PERMISSION_DENIED) {
-            boolean isFirstTimeRequest = StorageHelper.getBoolean(
-                    context,IS_FIRST_TIME_PERMISSION_REQUEST,true);
-            if (!isFirstTimeRequest) {
-                if (ActivityCompat.shouldShowRequestPermissionRationale(
-                        Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                        ANDROID_PERMISSION_STRING) && !showFallbackSettings){
-                    Logger.v("Notification permission is denied. Please grant notification permission access" +
-                            " in your app's settings to send notifications");
-                    return;
-                }
-            }
+    /**
+     * Shows either push primer or directly calls hard permission dialog flow based on whether
+     * `isFromPromptPermission` is true.
+     * @param jsonObject InApp object
+     */
+    private void showSoftOrHardPrompt(final JSONObject jsonObject) {
+        if (jsonObject.optBoolean(IS_HARD_PERMISSION_REQUEST, false)) {
             startPrompt(Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
-                    config,showFallbackSettings);
-        }else{
-            Logger.v("Notification permission is granted.");
+                    config, jsonObject.optBoolean(FALLBACK_TO_NOTIFICATION_SETTINGS, false));
+        } else {
+            prepareNotificationForDisplay(jsonObject);
         }
     }
 
@@ -239,7 +262,6 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
             intent.putExtra("configBundle", configBundle);
             intent.putExtra(Constants.INAPP_KEY, currentlyDisplayingInApp);
             intent.putExtra(DISPLAY_HARD_PERMISSION_BUNDLE_KEY, true);
-            intent.putExtra(DISPLAY_HARD_PERMISSION_BUNDLE_KEY, true);
             intent.putExtra(SHOW_FALLBACK_SETTINGS_BUNDLE_KEY, showFallbackSettings);
             activity.startActivity(intent);
         }
@@ -247,8 +269,7 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @RequiresApi(api = 33)
     public boolean isPushPermissionGranted(){
-        int permissionStatus = ContextCompat.checkSelfPermission(
-                Objects.requireNonNull(CoreMetaData.getCurrentActivity()),
+        int permissionStatus = ContextCompat.checkSelfPermission(context,
                 Manifest.permission.POST_NOTIFICATIONS);
         return permissionStatus == PackageManager.PERMISSION_GRANTED;
     }
@@ -260,20 +281,8 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
 
     @Override
     public void inAppNotificationDidClick(CTInAppNotification inAppNotification, Bundle formData,
-            HashMap<String, String> keyValueMap, int btnClickIndex) {
+            HashMap<String, String> keyValueMap) {
         analyticsManager.pushInAppNotificationStateEvent(true, inAppNotification, formData);
-        if (inAppNotification.isLocalInApp()){
-            if (btnClickIndex == 0){
-                if (callbackManager.getPushPrimerButtonListener() != null) {
-                    callbackManager.getPushPrimerButtonListener().onPositiveButtonClick(inAppNotification);
-                }
-            }else if (btnClickIndex == 1){
-                if (callbackManager.getPushPrimerButtonListener() != null) {
-                    callbackManager.getPushPrimerButtonListener().onNegativeButtonClick(inAppNotification);
-                }
-            }
-        }
-
         if (keyValueMap != null && !keyValueMap.isEmpty()) {
             if (callbackManager.getInAppNotificationButtonListener() != null) {
                 callbackManager.getInAppNotificationButtonListener().onInAppButtonClick(keyValueMap);
@@ -367,16 +376,16 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     @Override
-    public void onAccept() {
-        final PushPermissionResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
+    public void onPushPermissionAccept() {
+        final PushPermissionResponseListener listener = callbackManager.getPushPermissionResponseListener();
         if (listener != null){
             listener.onPushPermissionResponse(true);
         }
     }
 
     @Override
-    public void onReject() {
-        final PushPermissionResponseListener listener = callbackManager.getPushPermissionNotificationResponseListener();
+    public void onPushPermissionDeny() {
+        final PushPermissionResponseListener listener = callbackManager.getPushPermissionResponseListener();
         if (listener != null){
             listener.onPushPermissionResponse(false);
         }
@@ -605,10 +614,17 @@ public class InAppController implements CTInAppNotification.CTInAppNotificationL
     }
 
     private void incrementLocalInAppCountInPersistentStore(Context context, CTInAppNotification inAppNotification) {
-        if (inAppNotification.isLocalInApp()){
-            int localInAppCount = StorageHelper.getInt(context,LOCAL_INAPP_COUNT,0);
-            ++localInAppCount;
-            StorageHelper.putInt(context,LOCAL_INAPP_COUNT,localInAppCount);
+        if (inAppNotification.isLocalInApp()) {
+            deviceInfo.incrementLocalInAppCount();//update cache
+            Task<Void> task = CTExecutorFactory.executors(config).ioTask();
+            task.execute("InAppController#incrementLocalInAppCountInPersistentStore", new Callable<Void>() {
+                @Override
+                public Void call() {
+                    StorageHelper.putIntImmediate(context, LOCAL_INAPP_COUNT,
+                            deviceInfo.getLocalInAppCount());// update disk with cache
+                    return null;
+                }
+            });
         }
     }
 

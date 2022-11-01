@@ -1644,7 +1644,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      */
     @SuppressWarnings({"unused", "WeakerAccess"})
     public PushPermissionResponseListener getPushPermissionNotificationResponseListener() {
-        return coreState.getCallbackManager().getPushPermissionNotificationResponseListener();
+        return coreState.getCallbackManager().getPushPermissionResponseListener();
     }
 
     /**
@@ -1656,7 +1656,7 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     public void setPushPermissionNotificationResponseListener(PushPermissionResponseListener
                                                                           pushPermissionResponseListener) {
         coreState.getCallbackManager().
-                setPushPermissionNotificationResponseListener(pushPermissionResponseListener);
+                setPushPermissionResponseListener(pushPermissionResponseListener);
     }
 
     /**
@@ -1924,11 +1924,13 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         coreState.getAnalyticsManager().pushInboxMessageStateEvent(true, inboxMessage, data);
 
         if (keyValue != null && !keyValue.isEmpty()) {
+            Logger.v("clicked button of an inbox notification.");
             if (inboxMessageButtonListener != null && inboxMessageButtonListener.get() != null) {
                 inboxMessageButtonListener.get().onInboxButtonClick(keyValue);
             }
         }
         else{
+            Logger.v("clicked inbox notification.");
             if (isBodyClick && inboxMessageListener != null && inboxMessageListener.get() != null) {
                 inboxMessageListener.get().onInboxItemClicked(inboxMessage);
             }
@@ -2457,11 +2459,6 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
     @SuppressWarnings("unused")
     public void setInAppNotificationButtonListener(InAppNotificationButtonListener listener) {
         coreState.getCallbackManager().setInAppNotificationButtonListener(listener);
-    }
-
-    @SuppressWarnings("unused")
-    public void setPushPrimerButtonListener(PushPrimerButtonListener listener) {
-        coreState.getCallbackManager().setPushPrimerButtonListener(listener);
     }
 
     @SuppressWarnings("unused")

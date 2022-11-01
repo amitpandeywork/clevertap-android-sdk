@@ -34,14 +34,27 @@ public class CTWebInterface {
      * for Android 13 and above
      */
     @JavascriptInterface
-    public void promptForPushPermission(boolean shouldShowFallbackSettings) {
+    public void promptPushPermission(boolean shouldShowFallbackSettings) {
+        CleverTapAPI cleverTapAPI = weakReference.get();
+        if (cleverTapAPI == null) {
+            Logger.d("CleverTap Instance is null.");
+        } else {
+            //Dismisses current IAM and proceeds to call promptForPushPermission()
+            dismissInAppNotification();
+            cleverTapAPI.promptForPushPermission(shouldShowFallbackSettings);
+        }
+    }
+    /**
+     * Method to be called from WebView Javascript to dismiss the InApp notification
+     */
+    @JavascriptInterface
+    public void dismissInAppNotification() {
         CleverTapAPI cleverTapAPI = weakReference.get();
         if (cleverTapAPI == null) {
             Logger.d("CleverTap Instance is null.");
         } else {
             //Dismisses current IAM and proceeds to call promptForPushPermission()
             inAppBaseFullFragment.didDismiss(null);
-            cleverTapAPI.promptForPushPermission(shouldShowFallbackSettings);
         }
     }
 

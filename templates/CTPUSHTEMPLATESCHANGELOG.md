@@ -1,8 +1,9 @@
 ## CleverTap Push Templates SDK CHANGE LOG
 
-### Version 1.0.6 (October 21, 2022)
+### Version 1.0.6 (October 31, 2022)
 * Targets Android 13
 * Supports CleverTap Android SDK v4.7.0
+* Minimum Android SDK version bumped to API 19 (Android 4.4).
 
 ### Version 1.0.5 (September 13, 2022)
 * fixes a bug on android 12 where push template notification header was not displaying subtitle text.

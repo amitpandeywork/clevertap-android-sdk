@@ -168,10 +168,22 @@ public final class StorageHelper {
         persist(editor);
     }
 
+    public static void putBooleanImmediate(Context context, String key, boolean value) {
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().putBoolean(key, value);
+        persistImmediately(editor);
+    }
+
     public static void putInt(Context context, String key, int value) {
         SharedPreferences prefs = getPreferences(context);
         SharedPreferences.Editor editor = prefs.edit().putInt(key, value);
         persist(editor);
+    }
+
+    public static void putIntImmediate(Context context, String key, int value) {
+        SharedPreferences prefs = getPreferences(context);
+        SharedPreferences.Editor editor = prefs.edit().putInt(key, value);
+        persistImmediately(editor);
     }
 
     static void putLong(Context context, String key, long value) {

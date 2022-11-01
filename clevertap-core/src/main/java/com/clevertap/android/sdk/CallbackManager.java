@@ -25,11 +25,10 @@ public class CallbackManager extends BaseCallbackManager {
     private SCDomainListener scDomainListener;
 
     private WeakReference<InAppNotificationButtonListener> inAppNotificationButtonListener;
-    private WeakReference<PushPrimerButtonListener> pushPrimerButtonListener;
 
     private InAppNotificationListener inAppNotificationListener;
 
-    private PushPermissionResponseListener pushPermissionNotificationResponseListener;
+    private PushPermissionResponseListener pushPermissionResponseListener;
 
     private CTInboxListener inboxListener;
 
@@ -124,22 +123,9 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public PushPrimerButtonListener getPushPrimerButtonListener() {
-        if (pushPrimerButtonListener != null && pushPrimerButtonListener.get() != null){
-            return pushPrimerButtonListener.get();
-        }
-        return null;
-    }
-
-    @Override
     public void setInAppNotificationButtonListener(
             InAppNotificationButtonListener inAppNotificationButtonListener) {
         this.inAppNotificationButtonListener = new WeakReference<>(inAppNotificationButtonListener);
-    }
-
-    @Override
-    public void setPushPrimerButtonListener(PushPrimerButtonListener pushPrimerButtonListener) {
-        this.pushPrimerButtonListener = new WeakReference<>(pushPrimerButtonListener);
     }
 
     @Override
@@ -148,8 +134,8 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public PushPermissionResponseListener getPushPermissionNotificationResponseListener() {
-        return pushPermissionNotificationResponseListener;
+    public PushPermissionResponseListener getPushPermissionResponseListener() {
+        return pushPermissionResponseListener;
     }
 
     @Override
@@ -158,8 +144,8 @@ public class CallbackManager extends BaseCallbackManager {
     }
 
     @Override
-    public void setPushPermissionNotificationResponseListener(PushPermissionResponseListener pushPermissionNotificationResponseListener) {
-        this.pushPermissionNotificationResponseListener = pushPermissionNotificationResponseListener;
+    public void setPushPermissionResponseListener(PushPermissionResponseListener pushPermissionResponseListener) {
+        this.pushPermissionResponseListener = pushPermissionResponseListener;
     }
 
     @Override
