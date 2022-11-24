@@ -118,7 +118,7 @@ public class DeviceInfo {
 
         private String getBluetoothVersion() {
             String bluetoothVersion = "none";
-            if (android.os.Build.VERSION.SDK_INT >= 18 &&
+            if (Build.VERSION.SDK_INT >= 18 &&
                     context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH_LE)) {
                 bluetoothVersion = "ble";
             } else if (context.getPackageManager().hasSystemFeature(PackageManager.FEATURE_BLUETOOTH)) {
@@ -757,7 +757,7 @@ public class DeviceInfo {
                 getConfigLogger().verbose(config.getAccountId() + ":async_deviceID",
                         "DeviceID initialized successfully!" + Thread.currentThread());
                 // No need to put getDeviceID() on background thread because prefs already loaded
-                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
+//                CleverTapAPI.instanceWithConfig(context, config).deviceIDCreated(getDeviceID());
             }
         });
         task.execute("initDeviceID", new Callable<Void>() {

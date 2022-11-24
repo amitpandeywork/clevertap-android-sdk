@@ -3,31 +3,31 @@ package com.clevertap.demo
 
 import android.app.NotificationManager
 import android.content.Context
-
 import android.content.Intent
 import android.os.Build
-
 import android.os.Bundle
 import android.util.Log
 import android.widget.Toast
 import androidx.appcompat.app.AppCompatActivity
 import androidx.fragment.app.commitNow
-import com.clevertap.android.sdk.*
+import com.clevertap.android.sdk.CTFeatureFlagsListener
+import com.clevertap.android.sdk.CTInboxListener
+import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
+import com.clevertap.android.sdk.InAppNotificationButtonListener
+import com.clevertap.android.sdk.InAppNotificationListener
+import com.clevertap.android.sdk.PushPermissionResponseListener
+import com.clevertap.android.sdk.SyncListener
 import com.clevertap.android.sdk.displayunits.DisplayUnitListener
 import com.clevertap.android.sdk.displayunits.model.CleverTapDisplayUnit
 import com.clevertap.android.sdk.inapp.CTInAppNotification
 import com.clevertap.android.sdk.product_config.CTProductConfigListener
 import com.clevertap.demo.ui.main.HomeScreenFragment
-
+import com.clevertap.demo.ui.main.NotificationUtils
 import dev.shreyaspatil.MaterialDialog.MaterialDialog.Builder
 import net.khirr.android.privacypolicy.PrivacyPolicyDialog
 import net.khirr.android.privacypolicy.PrivacyPolicyDialog.OnClickListener
-
-import com.clevertap.demo.ui.main.NotificationUtils
-
 import org.json.JSONObject
-import java.util.HashMap
 
 private const val TAG = "HomeScreenActivity"
 
@@ -76,7 +76,7 @@ class HomeScreenActivity : AppCompatActivity(), CTInboxListener, DisplayUnitList
         Thread {
             CleverTapAPI.createNotification(applicationContext, bundle)
         }.start()*/
-        initCleverTap()
+        //initCleverTap()
 
         val isReadPolicy: Boolean
         val email: String?

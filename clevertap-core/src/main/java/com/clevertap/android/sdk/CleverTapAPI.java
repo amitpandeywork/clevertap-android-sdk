@@ -22,6 +22,7 @@ import android.net.Uri;
 import android.os.Build;
 import android.os.Bundle;
 import android.text.TextUtils;
+import android.util.Log;
 import androidx.annotation.NonNull;
 import androidx.annotation.Nullable;
 import androidx.annotation.RequiresApi;
@@ -255,7 +256,8 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
      * @param extras  The {@link Bundle} object received by the broadcast receiver
      */
     @SuppressWarnings({"WeakerAccess"})
-    public static void createNotification(final Context context, final Bundle extras) {
+    public static void
+    createNotification(final Context context, final Bundle extras) {
         createNotification(context, extras, Constants.EMPTY_NOTIFICATION_ID);
     }
 
@@ -754,7 +756,15 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         }
 
         for (String accountId : CleverTapAPI.instances.keySet()) {
-            CleverTapAPI instance = CleverTapAPI.instances.get(accountId);
+            CleverTapAPI instance = null;
+            instance = CleverTapAPI.instances.get(accountId);
+            try {
+                Thread.sleep(1000);
+            } catch (InterruptedException e) {
+                e.printStackTrace();
+            }
+            Log.e("CleverTapAPI",
+                    "Instance get on thread " + Thread.currentThread().getId() + " " + accountId + "times");
             boolean shouldProcess = false;
             if (instance != null) {
                 shouldProcess = (_accountId == null && instance.coreState.getConfig().isDefaultInstance())
@@ -866,7 +876,16 @@ public class CleverTapAPI implements CTInboxActivity.InboxActivityListener {
         CleverTapAPI instance = instances.get(config.getAccountId());
         if (instance == null) {
             instance = new CleverTapAPI(context, config, cleverTapID);
-            instances.put(config.getAccountId(), instance);
+
+            for (int i = 0; i < 1000; i++) {
+                try {
+                    instances.put(i + "", instance);
+                    Thread.sleep(1000);
+                } catch (InterruptedException e) {
+                    e.printStackTrace();
+                }
+                Log.e("CleverTapAPI", "Instance put on thread " + Thread.currentThread().getId() + " " + i + "times");
+            }
             final CleverTapAPI finalInstance = instance;
             Task<Void> task = CTExecutorFactory.executors(instance.coreState.getConfig()).postAsyncSafelyTask();
             task.execute("recordDeviceIDErrors", new Callable<Void>() {

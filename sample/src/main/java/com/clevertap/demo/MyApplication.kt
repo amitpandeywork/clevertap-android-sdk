@@ -4,27 +4,19 @@ import android.app.Activity
 import android.app.Application.ActivityLifecycleCallbacks
 import android.app.NotificationManager
 import android.content.Context
-import android.content.Intent
-
 import android.os.Build
-
 import android.os.Bundle
 import android.util.Log
 import androidx.multidex.MultiDex
 import androidx.multidex.MultiDexApplication
 import com.clevertap.android.pushtemplates.PushTemplateNotificationHandler
 import com.clevertap.android.pushtemplates.TemplateRenderer
-import com.clevertap.android.sdk.ActivityLifecycleCallback
 import com.clevertap.android.sdk.CleverTapAPI
 import com.clevertap.android.sdk.CleverTapAPI.LogLevel.VERBOSE
-import com.clevertap.android.sdk.SyncListener
+import com.clevertap.android.sdk.CleverTapInstanceConfig
 import com.clevertap.android.sdk.interfaces.NotificationHandler
 import com.clevertap.android.sdk.pushnotification.CTPushNotificationListener
 import com.clevertap.demo.ui.main.NotificationUtils
-import com.google.android.gms.security.ProviderInstaller
-import com.google.android.gms.security.ProviderInstaller.ProviderInstallListener
-import org.json.JSONObject
-import kotlin.system.measureTimeMillis
 
 class MyApplication : MultiDexApplication(), CTPushNotificationListener, ActivityLifecycleCallbacks {
 
@@ -51,12 +43,35 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
         TemplateRenderer.debugLevel = 3;
         CleverTapAPI.setNotificationHandler(PushTemplateNotificationHandler() as NotificationHandler)
 
-        val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
+        /*val measureTimeMillis = measureTimeMillis { ActivityLifecycleCallback.register(this) }
         println("Time taken to execute  ActivityLifecycleCallback.register = $measureTimeMillis milliseconds")
-
-        registerActivityLifecycleCallbacks(this)
+*/
+        //registerActivityLifecycleCallbacks(this)
         super.onCreate()
 
+        Thread {
+            val config = CleverTapInstanceConfig.createInstance(
+                this@MyApplication, "abnc", "aa"
+            )
+            CleverTapAPI.instanceWithConfig(this@MyApplication, config)
+        }.start()
+        Thread {
+            Thread.sleep(2000)
+            CleverTapAPI.getGlobalInstance(this@MyApplication, "abnc")
+        }.start()
+
+        /*Thread {
+            Thread.sleep(10000)
+            val config = CleverTapInstanceConfig.createInstance(
+                this@MyApplication, "abncdd", "aa"
+            )
+            CleverTapAPI.instanceWithConfig(this@MyApplication,config)
+        }.start()
+        Thread {
+            Thread.sleep(12000)
+            CleverTapAPI.getGlobalInstance(this@MyApplication,"abncdd")
+        }.start()*/
+/*
         ProviderInstaller.installIfNeededAsync(this, object : ProviderInstallListener {
             override fun onProviderInstalled() {}
             override fun onProviderInstallFailed(i: Int, intent: Intent?) {
@@ -84,10 +99,6 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
             )
         }
 
-        /*println(
-            "CleverTapAttribution Identifier from Application class= " +
-                    "${defaultInstance?.cleverTapAttributionIdentifier}"
-        )*/
 
         if (Build.VERSION.SDK_INT < Build.VERSION_CODES.TIRAMISU) {
             CleverTapAPI.createNotificationChannel(
@@ -98,7 +109,7 @@ class MyApplication : MultiDexApplication(), CTPushNotificationListener, Activit
                 this, "PTTesting", "Push templates",
                 "All push templates", NotificationManager.IMPORTANCE_MAX, true
             )
-        }
+        }*/
     }
 
     override fun onNotificationClickedPayloadReceived(payload: HashMap<String, Any>?) {
