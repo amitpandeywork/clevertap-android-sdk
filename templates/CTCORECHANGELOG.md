@@ -1,5 +1,24 @@
 ## CleverTap Android SDK CHANGE LOG
 
+### Version 4.7.3 (January 25, 2023)
+* Fixes message UI for footer in-app. 
+* Fixes NPE when clicked on body of InboxMessage with deep link in `CTInboxListFragment`
+* Other bug fixes and performance improvements.
+
+### Version 4.7.2 (December 16, 2022)
+* Fixes a crash (`ClassCastException`) in header/footer InApp templates.
+
+### Version 4.7.1 (December 5, 2022)
+* Fixes ANR on main thread for static initialization of `SimpleDateFormat()`.
+* Add Proguard rules to keep `CREATOR` instance for Parcelable classes to prevent `ClassNotFoundException` when unmarshalling: `androidx.fragment.app.FragmentManagerState`
+* Made calls to `getInstallReferrer()` async to prevent ANR when called on main thread.
+* Used `ConcurrentHashMap` instead of `HashMap` for storing `CleverTapAPI` instances to prevent ConcurrentModificationException when trying to access the instances concurrently.
+* Made calls to `findCTPushProvider()` and `findCustomEnabledPushTypes()` async to prevent ANR when called on main thread.
+* Renames `setPushPermissionNotificationResponseListener(PushPermissionResponseListener)` to `registerPushPermissionNotificationResponseListener(PushPermissionResponseListener)` . Each `PushPermissionResponseListener` instance passed in this method is now maintained in a list of the `PushPermissionResponseListener` type and the Push Primer result is notified to all the elements of this list.
+* Adds `unregisterPushPermissionNotificationResponseListener(PushPermissionResponseListener)` method in `CleverTapAPI` class to unregister the  `PushPermissionResponseListener` instance to stop observing the  Push Primer result.
+* Use v4.7.2, this version contains a bug which causes a crash (`ClassCastException`) in header/footer InApp templates.
+
+
 ### Version 4.7.0 (November 1, 2022)
 * Adds below new public APIs for supporting [Android 13 notification runtime permission](https://developer.android.com/develop/ui/views/notifications/notification-permission)
   * `isPushPermissionGranted()` [Usage can be found here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/EXAMPLES.md#check-the-status-of-notification-permission-whether-its-granted-or-denied)
@@ -9,6 +28,7 @@
 * New callback `PushPermissionResponseListener` available which returns after user Allows/Denies notification permission [Usage can be found here](https://github.com/CleverTap/clevertap-android-sdk/blob/master/docs/EXAMPLES.md#available-callbacks-for-push-primer)
 * From 4.7.0+ existing callback `InAppNotificationListener` will now have `onShow(CTInAppNotification)` method which needs to implemented
 * Minimum Android SDK version bumped to API 19 (Android 4.4)
+* Use v4.7.2, this version contains a bug which causes a crash (`ClassCastException`) in header/footer InApp templates.
 
 ### Version 4.6.6 (October 31, 2022)
 * Fixes App Inbox bug where an Inbox message's video would not play when new Inbox messages were available
