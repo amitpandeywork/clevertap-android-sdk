@@ -56,8 +56,8 @@ class FakeServer {
 
             val resp = JSONObject()
             val (finalVars,finalVarsFromCode) = when(expectedBackendData){
-                VARS1_VARSCODE -> vars1 to (if (hasForcedPushedVariables) localVarsJson else codeVarsFromServer)
-                VARS2_VARSCODE -> vars2 to (if (hasForcedPushedVariables) localVarsJson else codeVarsFromServer)
+                VARS1_VARSCODE -> vars1 to (if (hasForcedPushedVariables) vars1 else vars1)
+                VARS2_VARSCODE -> vars2 to (if (hasForcedPushedVariables) vars2 else vars2)
                 VARSLOCAL_VARSLOCAL -> localVarsJson to localVarsJson
             }
             resp.put("vars",finalVars)
