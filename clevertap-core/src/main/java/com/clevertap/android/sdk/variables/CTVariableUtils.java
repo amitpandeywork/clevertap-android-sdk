@@ -55,11 +55,47 @@ public final class CTVariableUtils {
         }
     }
 
+    //mobile.smartphone.android -> mobile {smartphone {android ...
+    private static Map<String, Object> convertFlatDiff(Map<String, Object> map) {
+        Map<String, Object> result = new HashMap<>();
+
+        for (Map.Entry<String, Object> entry : map.entrySet()) {
+            String key = entry.getKey();
+            if (key.contains(".")) {
+                String[] components = key.split("\\.");
+                int namePosition = components.length - 1;
+                Map<String, Object> currentMap = result;
+
+                for (int i = 0; i < components.length; i++) {
+                    String component = components[i];
+                    if (i == namePosition) {
+                        currentMap.put(component, entry.getValue());
+                    } else {
+                        if (!currentMap.containsKey(component)) {
+                            Map<String, Object> nestedMap = new HashMap<String, Object>();
+                            currentMap.put(component, nestedMap);
+                            currentMap = nestedMap;
+                        } else { // TODO check for type
+                            currentMap = (Map<String, Object>) currentMap.get(component);
+                        }
+                    }
+                }
+            } else {
+                result.put(entry.getKey(), entry.getValue());
+            }
+        }
+
+        return result;
+    }
+
     // check test for more info
     public static Object mergeHelper(Object vars, Object diff) {
         //Logger.v( "mergeHelper() called with: vars = [" + vars + "], diff = [" + diff + "]");
         if (diff == null) {
             return vars;
+        }
+        if (diff instanceof Map) {
+            diff = convertFlatDiff((Map<String, Object>) diff); // TODO check type
         }
         if (diff instanceof Number
                 || diff instanceof Boolean
@@ -181,7 +217,7 @@ public final class CTVariableUtils {
             }
             return result;
         }
-        else if (collection instanceof List) {
+        else if (collection instanceof List) { // TODO remove
             List<Object> castedList = CTVariableUtils.uncheckedCast(collection);
             Object result = castedList.get((Integer) key);
             if (autoInsert && result == null) {
