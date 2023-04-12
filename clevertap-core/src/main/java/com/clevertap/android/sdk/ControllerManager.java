@@ -27,7 +27,7 @@ public class ControllerManager {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -39,7 +39,7 @@ public class ControllerManager {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -84,7 +84,7 @@ public class ControllerManager {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -95,7 +95,7 @@ public class ControllerManager {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -114,7 +114,7 @@ public class ControllerManager {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
@@ -124,7 +124,7 @@ public class ControllerManager {
 
     /**
      * <p style="color:#4d2e00;background:#ffcc99;font-weight: bold" >
-     *      Note: This method has been deprecated and will be removed in the future versions of this SDK.
+     *      Note: This method has been deprecated since v5.0.0 and will be removed in the future versions of this SDK.
      * </p>
      */
     @Deprecated
